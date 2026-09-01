@@ -8,8 +8,7 @@ Ia sesuai untuk dimuat naik semula ke ChatGPT, Canva Code atau Gemini Canvas unt
 
 Nama sekolah, kod sekolah JBA1021, lencana dan kedua-dua URL CSV telah dimasukkan.
 
-Sebelum menggunakan mod admin, gantikan placeholder berikut dalam fail HTML:
-- [MASUKKAN URL WEB APP GOOGLE APPS SCRIPT]
+URL Google Apps Script telah dimasukkan dan mod admin telah dikonfigurasi.
 
 Fail admin:
 - google-apps-script-admin-template.gs
@@ -32,9 +31,9 @@ CARA AKTIFKAN ADMIN
 1. Buka script.google.com dan cipta projek baharu.
 2. Tampal kandungan google-apps-script-admin-template.gs.
 3. Deploy sebagai Web App: Execute as Me; Who has access: Anyone.
-4. Salin URL /exec yang diberikan.
-5. Dalam index.html, gantikan [MASUKKAN URL WEB APP GOOGLE APPS SCRIPT] dengan URL /exec itu.
-6. Commit semula index.html ke GitHub.
+4. URL /exec telah dimasukkan dalam index.html. Jika Apps Script dideploy semula,
+   gantikan appsScriptUrl dengan URL deployment yang terbaharu.
+5. Commit semula index.html ke GitHub jika URL deployment berubah.
 
 Nota privasi:
 - Data No K/P tidak patut diletakkan dalam CSV awam. Nyahterbitkan tab kedua selepas Apps Script siap diuji.
