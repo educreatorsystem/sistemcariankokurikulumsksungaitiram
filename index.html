@@ -1,0 +1,2192 @@
+<!doctype html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistem Carian Pelajar</title>
+  <meta name="description" content="Sistem carian, tapisan, pengurusan kelas dan cetakan senarai murid untuk sekolah.">
+  <style>
+    :root {
+      --indigo: #4338ca;
+      --violet: #7c3aed;
+      --pink: #db2777;
+      --slate: #172033;
+      --muted: #64748b;
+      --page: #f7f4ff;
+      --card: #ffffff;
+      --line: #e0e7ff;
+      --shadow: 0 14px 38px rgba(49, 46, 129, 0.1);
+      --lift: 0 20px 48px rgba(49, 46, 129, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--slate);
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(244, 114, 182, 0.18), transparent 34rem),
+        radial-gradient(circle at top right, rgba(99, 102, 241, 0.16), transparent 32rem),
+        linear-gradient(180deg, #fbfaff 0%, #f6f7fb 54%, #fff7fb 100%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .container {
+      width: min(100%, 1280px);
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    .header {
+      position: relative;
+      overflow: hidden;
+      color: white;
+      background: linear-gradient(120deg, #1d4ed8 0%, #4f46e5 28%, #7c3aed 55%, #db2777 78%, #f97316 100%);
+      background-size: 220% 220%;
+      box-shadow: var(--lift);
+      animation: gradient-flow 12s ease infinite;
+    }
+
+    .header::before,
+    .header::after {
+      position: absolute;
+      content: "";
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.11);
+      filter: blur(1px);
+      pointer-events: none;
+    }
+
+    .header::before {
+      width: 22rem;
+      height: 22rem;
+      top: -14rem;
+      right: -5rem;
+    }
+
+    .header::after {
+      width: 16rem;
+      height: 16rem;
+      bottom: -11rem;
+      left: 10%;
+    }
+
+    @keyframes gradient-flow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .header-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding: 1.5rem 0;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: flex;
+      width: 5rem;
+      height: 5rem;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 0.75rem;
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--indigo);
+      font-size: 2rem;
+      font-weight: 900;
+      box-shadow: var(--shadow);
+      transition: transform 220ms ease, box-shadow 220ms ease;
+    }
+
+    .badge:hover {
+      transform: translateY(-4px) rotate(-2deg) scale(1.04);
+      box-shadow: 0 22px 45px rgba(15, 23, 42, 0.28);
+    }
+
+    .badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #fce7f3;
+    }
+
+    h1 {
+      margin: 0.25rem 0 0;
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .school-meta {
+      margin: 0.6rem 0 0;
+      color: #eef2ff;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 2.75rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border: 0;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 900;
+      text-decoration: none;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 16px 30px rgba(49, 46, 129, 0.22);
+    }
+
+    .button-white {
+      background: #ffffff;
+      color: var(--indigo);
+    }
+
+    .button-glass {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+    }
+
+    .button-dark {
+      background: #111827;
+      color: white;
+    }
+
+    .button-primary {
+      background: linear-gradient(90deg, var(--indigo), var(--pink));
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .button-soft {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .button-green {
+      background: #10b981;
+      color: white;
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .status-bar {
+      border-bottom: 1px solid #dbeafe;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .status-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.8rem 0;
+      color: #475569;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .main {
+      padding: 1.5rem 0 2.5rem;
+    }
+
+    .notice {
+      margin-bottom: 1rem;
+      border-radius: 0.75rem;
+      padding: 0.9rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .notice-admin {
+      border: 1px solid #a7f3d0;
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .notice-warning {
+      border: 1px solid #fde68a;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .panel {
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 0.75rem;
+      background: white;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+    }
+
+    .panel:hover {
+      transform: translateY(-2px);
+      border-color: rgba(124, 58, 237, 0.24);
+      box-shadow: 0 22px 48px rgba(79, 70, 229, 0.15);
+    }
+
+    .search-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-icon {
+      position: absolute;
+      top: 50%;
+      left: 1rem;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 1.15rem;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 3.5rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      outline: 0;
+      background: rgba(238, 242, 255, 0.65);
+      padding: 0 3rem 0 3rem;
+      color: #111827;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .search-input:focus,
+    .field select:focus,
+    .password-input:focus {
+      border-color: #a5b4fc;
+      box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.38);
+    }
+
+    .clear-search {
+      position: absolute;
+      top: 50%;
+      right: 0.75rem;
+      display: none;
+      width: 2rem;
+      height: 2rem;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(-50%);
+      border: 0;
+      border-radius: 0.55rem;
+      background: white;
+      color: #64748b;
+      font-size: 1.35rem;
+      font-weight: 900;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+    }
+
+    .view-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.25rem;
+      border-radius: 0.75rem;
+      background: #f1f5f9;
+      padding: 0.25rem;
+    }
+
+    .toggle-button {
+      border: 0;
+      border-radius: 0.55rem;
+      background: transparent;
+      padding: 0.75rem 1rem;
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .toggle-button.active {
+      background: white;
+      color: var(--indigo);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    }
+
+    .panel-head {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      margin: 0;
+      color: #111827;
+      font-size: 1.35rem;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+    }
+
+    .field {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .field > span {
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .field select {
+      width: 100%;
+      min-height: 3rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      outline: 0;
+      background: #f8f7ff;
+      padding: 0 0.75rem;
+      color: #1f2937;
+      font-weight: 800;
+    }
+
+    .house-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .house-button {
+      min-height: 2.65rem;
+      border: 0;
+      border-radius: 0.55rem;
+      padding: 0.55rem 0.7rem;
+      font-size: 0.78rem;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .house-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(49, 46, 129, 0.14);
+    }
+
+    .house-button.active {
+      outline: 3px solid rgba(79, 70, 229, 0.32);
+      outline-offset: 2px;
+    }
+
+    .house-all {
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .house-merah,
+    .badge-merah {
+      background: #dc2626;
+      color: white;
+    }
+
+    .house-biru,
+    .badge-biru {
+      background: #2563eb;
+      color: white;
+    }
+
+    .house-hijau,
+    .badge-hijau {
+      background: #059669;
+      color: white;
+    }
+
+    .house-kuning,
+    .badge-kuning {
+      background: #fde047;
+      color: #111827;
+    }
+
+    .section-title {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin: 1.5rem 0 1rem;
+    }
+
+    .section-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .grid-results {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .list-results {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .student-card,
+    .student-row {
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 0.75rem;
+      background: white;
+      box-shadow: var(--shadow);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      animation: fade-in 360ms ease both;
+    }
+
+    .student-card:hover,
+    .student-row:hover {
+      transform: translateY(-6px) scale(1.012);
+      border-color: rgba(124, 58, 237, 0.26);
+      box-shadow: 0 24px 52px rgba(79, 70, 229, 0.2);
+    }
+
+    .student-card {
+      min-height: 15rem;
+      padding: 1.25rem;
+    }
+
+    .student-row {
+      padding: 1rem;
+    }
+
+    .student-top,
+    .student-row-inner {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .student-row-inner {
+      flex-direction: column;
+    }
+
+    .avatar {
+      display: flex;
+      width: 3rem;
+      height: 3rem;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.75rem;
+      color: white;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+    }
+
+    .avatar-lelaki {
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    }
+
+    .avatar-perempuan {
+      background: linear-gradient(135deg, #ec4899, #f43f5e);
+    }
+
+    .avatar-lain {
+      background: linear-gradient(135deg, #8b5cf6, #4f46e5);
+    }
+
+    .student-name {
+      margin: 0;
+      overflow-wrap: anywhere;
+      color: #111827;
+      font-size: 1.08rem;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .student-class {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 0.5rem;
+      padding: 0.35rem 0.55rem;
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .gender-lelaki {
+      background: #eff6ff;
+      color: #1d4ed8;
+      box-shadow: inset 0 0 0 1px #dbeafe;
+    }
+
+    .gender-perempuan {
+      background: #fdf2f8;
+      color: #be185d;
+      box-shadow: inset 0 0 0 1px #fce7f3;
+    }
+
+    .gender-lain {
+      background: #f5f3ff;
+      color: #6d28d9;
+      box-shadow: inset 0 0 0 1px #ede9fe;
+    }
+
+    .house-empty {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .medical-box {
+      margin-top: 1rem;
+      border: 1px solid #fecdd3;
+      border-radius: 0.65rem;
+      background: #fff1f2;
+      padding: 0.7rem 0.8rem;
+      color: #9f1239;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .identity-box {
+      margin-top: 1rem;
+      border-radius: 0.65rem;
+      background: #f8fafc;
+      padding: 0.7rem 0.8rem;
+      color: #334155;
+      font-size: 0.9rem;
+    }
+
+    .empty-state,
+    .loading-state {
+      border: 1px dashed #c7d2fe;
+      border-radius: 0.75rem;
+      background: white;
+      padding: 2rem 1rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .empty-state-icon {
+      font-size: 2.5rem;
+    }
+
+    .empty-state h3 {
+      margin: 1rem 0 0;
+      color: #111827;
+      font-size: 1.25rem;
+    }
+
+    .empty-state p,
+    .loading-state p {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .loader {
+      width: 2.5rem;
+      height: 2.5rem;
+      margin: 0 auto 1rem;
+      border: 4px solid #e0e7ff;
+      border-top-color: var(--indigo);
+      border-radius: 999px;
+      animation: spin 1s linear infinite;
+    }
+
+    .management-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .summary-card {
+      border-radius: 0.75rem;
+      padding: 0.9rem 1rem;
+    }
+
+    .summary-card p {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .summary-card strong {
+      display: block;
+      margin-top: 0.2rem;
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .summary-indigo {
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .summary-blue {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .summary-pink {
+      background: #fdf2f8;
+      color: #be185d;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: linear-gradient(90deg, var(--indigo), var(--violet));
+      color: white;
+      padding: 0.85rem;
+      text-align: left;
+      font-size: 0.75rem;
+    }
+
+    td {
+      border-top: 1px solid #e5e7eb;
+      padding: 0.75rem 0.85rem;
+      vertical-align: top;
+    }
+
+    .table-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .print-heading {
+      display: none;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .print-badge {
+      display: flex;
+      width: 5rem;
+      height: 5rem;
+      margin: 0 auto 0.75rem;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.75rem;
+      font-size: 2rem;
+    }
+
+    .signature {
+      display: none;
+      margin-top: 2.5rem;
+      font-size: 0.9rem;
+    }
+
+    .signature-line {
+      width: 16rem;
+      margin-top: 2.5rem;
+      border-top: 1px solid #111827;
+      padding-top: 0.8rem;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.58);
+      padding: 1rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal {
+      width: min(100%, 28rem);
+      border-radius: 0.9rem;
+      background: white;
+      padding: 1.5rem;
+      box-shadow: var(--lift);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .modal-icon {
+      display: flex;
+      width: 3rem;
+      height: 3rem;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.75rem;
+      background: #eef2ff;
+      font-size: 1.5rem;
+    }
+
+    .modal h2 {
+      margin-top: 0.8rem;
+    }
+
+    .modal p {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .close-button {
+      display: flex;
+      width: 2.5rem;
+      height: 2.5rem;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 0.65rem;
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 1.35rem;
+      font-weight: 900;
+    }
+
+    .password-input {
+      width: 100%;
+      height: 3rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      outline: 0;
+      background: #f8f7ff;
+      padding: 0 0.85rem;
+      font-weight: 800;
+    }
+
+    .form-label {
+      display: block;
+      margin-top: 1.25rem;
+    }
+
+    .form-label span {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: #64748b;
+      font-size: 0.75rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .modal-error {
+      display: none;
+      margin-top: 0.8rem;
+      border-radius: 0.65rem;
+      background: #fff1f2;
+      padding: 0.7rem 0.8rem;
+      color: #be123c;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .toast-wrap {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 60;
+      display: flex;
+      width: min(92vw, 380px);
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .toast {
+      border: 1px solid;
+      border-radius: 0.75rem;
+      padding: 0.9rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 800;
+      box-shadow: var(--lift);
+      animation: toast-in 220ms ease both;
+    }
+
+    .toast-info {
+      border-color: #c7d2fe;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .toast-success {
+      border-color: #bbf7d0;
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .toast-warning {
+      border-color: #fde68a;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .toast-error {
+      border-color: #fecdd3;
+      background: #fff1f2;
+      color: #be123c;
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateX(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (min-width: 640px) {
+      .brand {
+        flex-direction: row;
+        text-align: left;
+      }
+
+      .header-actions,
+      .table-actions {
+        flex-direction: row;
+      }
+
+      .house-grid,
+      .summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .student-row-inner {
+        flex-direction: row;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-results {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .header-inner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .search-row {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .panel-head {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .filter-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .management-grid {
+        grid-template-columns: 1fr 1fr auto;
+        align-items: end;
+      }
+    }
+
+    @media (min-width: 1180px) {
+      .grid-results {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 12mm;
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: #111827;
+      }
+
+      .no-print,
+      .toast-wrap,
+      .modal-backdrop,
+      .screen-only {
+        display: none !important;
+      }
+
+      .main,
+      .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+      }
+
+      .print-section {
+        display: block !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+
+      .print-heading,
+      .signature {
+        display: block !important;
+      }
+
+      .print-hide {
+        display: none !important;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      th,
+      td {
+        padding: 6px 8px;
+      }
+
+      tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="toastWrap" class="toast-wrap no-print" aria-live="polite"></div>
+
+  <header class="header no-print">
+    <div class="container">
+      <div class="header-inner">
+        <div class="brand">
+          <div id="schoolBadge" class="badge" aria-label="Lencana sekolah">🏫</div>
+          <div>
+            <p class="eyebrow">Sistem sekolah</p>
+            <h1>Sistem Carian Pelajar</h1>
+            <p class="school-meta"><span id="schoolName">SEKOLAH KEBANGSAAN SUNGAI TIRAM</span> · <span id="schoolCode">JBA1021</span></p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="adminButton" class="button button-white" type="button"><span>🔐</span><span>Admin</span></button>
+          <button id="logoutButton" class="button button-dark" type="button" hidden><span>↪</span><span>Log Keluar</span></button>
+          <button id="reloadButton" class="button button-glass" type="button"><span id="reloadIcon">↻</span><span>Muat Semula Data</span></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="status-bar no-print">
+    <div class="container">
+      <div class="status-inner">
+        <div id="dataStatus">Memuatkan data pelajar daripada Google Sheets...</div>
+        <div id="lastLoaded">Data terakhir dimuatkan: -</div>
+      </div>
+    </div>
+  </section>
+
+  <main class="main">
+    <div class="container">
+      <div id="adminNotice" class="notice notice-admin no-print" hidden>Maklumat ini adalah sulit dan untuk kegunaan rasmi sekolah sahaja.</div>
+      <div id="developerWarning" class="notice notice-warning no-print">Amaran pembangun: URL Google Apps Script belum dimasukkan. Mod admin memerlukan pengesahan bahagian pelayan untuk keselamatan penuh.</div>
+
+      <section class="panel no-print">
+        <div class="search-row">
+          <label class="search-wrap">
+            <span class="sr-only">Cari nama pelajar</span>
+            <span class="search-icon">🔎</span>
+            <input id="searchInput" class="search-input" type="search" placeholder="Cari nama pelajar..." autocomplete="off">
+            <button id="clearSearchButton" class="clear-search" type="button" aria-label="Kosongkan carian">×</button>
+          </label>
+          <div class="view-toggle" aria-label="Pilihan paparan">
+            <button id="gridViewButton" class="toggle-button active" type="button">▦ Grid</button>
+            <button id="listViewButton" class="toggle-button" type="button">☰ Senarai</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel no-print" style="margin-top: 1rem;">
+        <div class="panel-head">
+          <h2>Tapisan</h2>
+          <button id="resetFiltersButton" class="button button-dark" type="button">↺ Reset Tapisan</button>
+        </div>
+        <div class="filter-grid">
+          <label class="field">
+            <span>Tahun</span>
+            <select id="yearFilter">
+              <option value="all">Semua Tahun</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Kelas</span>
+            <select id="classFilter">
+              <option value="all">Semua Kelas</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Jantina</span>
+            <select id="genderFilter">
+              <option value="all">Semua</option>
+              <option value="LELAKI">Lelaki</option>
+              <option value="PEREMPUAN">Perempuan</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Sejarah Perubatan</span>
+            <select id="medicalFilter">
+              <option value="all">Semua Murid</option>
+              <option value="ada">Ada Sejarah Perubatan</option>
+              <option value="tiada">Tiada Sejarah Perubatan</option>
+            </select>
+          </label>
+          <div class="field">
+            <span>Rumah Sukan</span>
+            <div id="houseButtons" class="house-grid">
+              <button class="house-button house-all active" type="button" data-house="all">Semua Rumah</button>
+              <button class="house-button house-merah" type="button" data-house="MERAH">Merah</button>
+              <button class="house-button house-biru" type="button" data-house="BIRU">Biru</button>
+              <button class="house-button house-hijau" type="button" data-house="HIJAU">Hijau</button>
+              <button class="house-button house-kuning" type="button" data-house="KUNING">Kuning</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="no-print">
+        <div class="section-title">
+          <h2 id="resultCount">0 pelajar dijumpai</h2>
+          <p>Disusun mengikut tahun, kelas dan nama murid.</p>
+        </div>
+        <div id="loadingState" class="loading-state">
+          <div class="loader" aria-hidden="true"></div>
+          <p>Memuatkan data pelajar daripada Google Sheets...</p>
+        </div>
+        <div id="emptyState" class="empty-state" hidden>
+          <div class="empty-state-icon">🔍</div>
+          <h3>Tiada pelajar dijumpai.</h3>
+          <p>Cuba gunakan kata carian lain atau reset tapisan.</p>
+          <button id="emptyResetButton" class="button button-primary" type="button" style="margin-top: 1rem;">↺ Reset Tapisan</button>
+        </div>
+        <div id="results" class="grid-results"></div>
+      </section>
+
+      <section id="managementSection" class="panel no-print" style="margin-top: 2rem;" hidden>
+        <h2>Pengurusan Guru Kelas</h2>
+        <p style="margin: 0.4rem 0 0; color: var(--muted); font-weight: 700;">Jana senarai murid mengikut kelas untuk kegunaan dan pengurusan guru.</p>
+        <div class="management-grid">
+          <label class="field">
+            <span>Pilih Tahun</span>
+            <select id="managementYear">
+              <option value="">Pilih Tahun</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Pilih Kelas</span>
+            <select id="managementClass" disabled>
+              <option value="">Pilih Kelas</option>
+            </select>
+          </label>
+          <button id="generateClassButton" class="button button-primary" type="button" disabled>Jana Senarai Murid</button>
+        </div>
+      </section>
+
+      <section id="classListSection" class="panel print-section" style="margin-top: 1.5rem;" hidden>
+        <div class="print-heading">
+          <div id="printBadge" class="print-badge">🏫</div>
+          <strong id="printSchoolName">SEKOLAH KEBANGSAAN SUNGAI TIRAM</strong>
+          <h2 style="margin-top: 0.5rem;">Senarai Murid</h2>
+          <p id="printMeta" style="margin: 0.25rem 0 0;"></p>
+        </div>
+        <div class="table-actions screen-only">
+          <div style="flex: 1;">
+            <h2>Senarai Murid</h2>
+            <p id="classListMeta" style="margin: 0.25rem 0 0; color: var(--muted); font-weight: 700;"></p>
+          </div>
+          <button id="printButton" class="button button-primary" type="button">Cetak Senarai</button>
+          <button id="closeClassListButton" class="button button-soft" type="button">Tutup Senarai</button>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-card summary-indigo"><p>Jumlah Murid</p><strong id="summaryTotal">0</strong></div>
+          <div class="summary-card summary-blue"><p>Lelaki</p><strong id="summaryMale">0</strong></div>
+          <div class="summary-card summary-pink"><p>Perempuan</p><strong id="summaryFemale">0</strong></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>BIL</th>
+                <th>NAMA MURID</th>
+                <th>NO K/P</th>
+                <th>JANTINA</th>
+                <th>RUMAH SUKAN</th>
+                <th>KELAS</th>
+                <th>SEJARAH PERUBATAN</th>
+              </tr>
+            </thead>
+            <tbody id="classListBody"></tbody>
+          </table>
+        </div>
+        <div class="signature">
+          <p>Disediakan oleh:</p>
+          <div class="signature-line">
+            <p>Nama Guru Kelas:</p>
+            <p>Tarikh:</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="adminModal" class="modal-backdrop no-print" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+    <form id="adminForm" class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-icon">🔒</div>
+          <h2 id="adminTitle">Akses Admin</h2>
+          <p>Masukkan kata laluan untuk mengakses maklumat terhad.</p>
+        </div>
+        <button id="closeAdminModalButton" class="close-button" type="button" aria-label="Tutup modal admin">×</button>
+      </div>
+      <label class="form-label">
+        <span>Kata Laluan</span>
+        <input id="adminPassword" class="password-input" type="password" autocomplete="current-password">
+      </label>
+      <div id="adminError" class="modal-error"></div>
+      <button id="unlockButton" class="button button-primary" type="submit" style="width: 100%; margin-top: 1rem;">🔓 Buka Kunci</button>
+    </form>
+  </div>
+
+  <script>
+    const SYSTEM_CONFIG = {
+      schoolName: "SEKOLAH KEBANGSAAN SUNGAI TIRAM",
+      schoolCode: "JBA1021",
+      badgeUrl: "https://iili.io/n9NHmWQ.md.png",
+      mainCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLWk-tTzAdaDdUW2jfCi1LqA25kPuaCDSUsJL6OYOa__EgnE4tHOt93nPV_-MLqwQdMCks4ZoPgCvD/pub?gid=0&single=true&output=csv",
+      additionalCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLWk-tTzAdaDdUW2jfCi1LqA25kPuaCDSUsJL6OYOa__EgnE4tHOt93nPV_-MLqwQdMCks4ZoPgCvD/pub?gid=1605065552&single=true&output=csv",
+      appsScriptUrl: "[MASUKKAN URL WEB APP GOOGLE APPS SCRIPT]",
+      adminSessionMinutes: 15,
+      loadAdditionalCsvBeforeAdmin: false,
+      maskIdentityNumber: true
+    };
+
+    const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v1";
+    const LOADING_MESSAGE = "Memuatkan data pelajar daripada Google Sheets...";
+    const DEFAULT_FILTERS = {
+      tahun: "all",
+      kelas: "all",
+      jantina: "all",
+      rumahSukan: "all",
+      perubatan: "all"
+    };
+
+    const state = {
+      students: [],
+      filteredStudents: [],
+      filters: { ...DEFAULT_FILTERS },
+      searchText: "",
+      debouncedSearch: "",
+      viewMode: "grid",
+      loading: true,
+      adminActive: false,
+      adminToken: "",
+      classList: [],
+      managementYear: "",
+      managementClass: "",
+      noResultToastKey: ""
+    };
+
+    const elements = {};
+    let debounceTimer = 0;
+    let adminIdleTimer = 0;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      bindElements();
+      applyConfigToPage();
+      bindEvents();
+      loadStudents(false);
+      render();
+    });
+
+    function bindElements() {
+      [
+        "toastWrap", "schoolBadge", "schoolName", "schoolCode", "adminButton",
+        "logoutButton", "reloadButton", "reloadIcon", "dataStatus", "lastLoaded",
+        "adminNotice", "developerWarning", "searchInput", "clearSearchButton",
+        "gridViewButton", "listViewButton", "resetFiltersButton", "yearFilter",
+        "classFilter", "genderFilter", "medicalFilter", "houseButtons",
+        "resultCount", "loadingState", "emptyState", "emptyResetButton", "results",
+        "managementSection", "managementYear", "managementClass",
+        "generateClassButton", "classListSection", "printBadge",
+        "printSchoolName", "printMeta", "classListMeta", "summaryTotal",
+        "summaryMale", "summaryFemale", "classListBody", "printButton",
+        "closeClassListButton", "adminModal", "adminForm", "closeAdminModalButton",
+        "adminPassword", "adminError", "unlockButton"
+      ].forEach((id) => {
+        elements[id] = document.getElementById(id);
+      });
+    }
+
+    function applyConfigToPage() {
+      elements.schoolName.textContent = displayValue(SYSTEM_CONFIG.schoolName, "Nama sekolah belum ditetapkan");
+      elements.schoolCode.textContent = displayValue(SYSTEM_CONFIG.schoolCode, "Kod sekolah belum ditetapkan");
+      elements.printSchoolName.textContent = displayValue(SYSTEM_CONFIG.schoolName, "Nama sekolah belum ditetapkan");
+
+      if (isConfiguredUrl(SYSTEM_CONFIG.badgeUrl)) {
+        elements.schoolBadge.innerHTML = `<img src="${escapeAttribute(SYSTEM_CONFIG.badgeUrl)}" alt="Lencana sekolah">`;
+        elements.printBadge.innerHTML = `<img src="${escapeAttribute(SYSTEM_CONFIG.badgeUrl)}" alt="Lencana sekolah" style="width:100%;height:100%;object-fit:contain;">`;
+      }
+
+      elements.developerWarning.hidden = isConfiguredUrl(SYSTEM_CONFIG.appsScriptUrl);
+    }
+
+    function bindEvents() {
+      elements.reloadButton.addEventListener("click", () => loadStudents(true));
+      elements.adminButton.addEventListener("click", openAdminModal);
+      elements.logoutButton.addEventListener("click", () => logoutAdmin("manual"));
+      elements.closeAdminModalButton.addEventListener("click", closeAdminModal);
+      elements.adminModal.addEventListener("click", (event) => {
+        if (event.target === elements.adminModal) closeAdminModal();
+      });
+      elements.adminForm.addEventListener("submit", handleAdminSubmit);
+      elements.adminPassword.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          elements.adminForm.requestSubmit();
+        }
+      });
+      elements.searchInput.addEventListener("input", (event) => {
+        state.searchText = event.target.value;
+        elements.clearSearchButton.style.display = state.searchText ? "flex" : "none";
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          state.debouncedSearch = state.searchText;
+          applyFiltersAndRender();
+        }, 260);
+      });
+      elements.clearSearchButton.addEventListener("click", () => {
+        state.searchText = "";
+        state.debouncedSearch = "";
+        elements.searchInput.value = "";
+        elements.clearSearchButton.style.display = "none";
+        applyFiltersAndRender();
+      });
+      elements.gridViewButton.addEventListener("click", () => setViewMode("grid"));
+      elements.listViewButton.addEventListener("click", () => setViewMode("list"));
+      elements.resetFiltersButton.addEventListener("click", resetFilters);
+      elements.emptyResetButton.addEventListener("click", resetFilters);
+      elements.yearFilter.addEventListener("change", (event) => {
+        state.filters.tahun = event.target.value;
+        state.filters.kelas = "all";
+        elements.classFilter.value = "all";
+        populateClassFilter();
+        applyFiltersAndRender();
+      });
+      elements.classFilter.addEventListener("change", (event) => {
+        state.filters.kelas = event.target.value;
+        applyFiltersAndRender();
+      });
+      elements.genderFilter.addEventListener("change", (event) => {
+        state.filters.jantina = event.target.value;
+        applyFiltersAndRender();
+      });
+      elements.medicalFilter.addEventListener("change", (event) => {
+        state.filters.perubatan = event.target.value;
+        applyFiltersAndRender();
+      });
+      elements.houseButtons.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-house]");
+        if (!button) return;
+        state.filters.rumahSukan = button.dataset.house;
+        updateHouseButtons();
+        applyFiltersAndRender();
+      });
+      elements.managementYear.addEventListener("change", (event) => {
+        state.managementYear = event.target.value;
+        state.managementClass = "";
+        populateManagementClasses();
+        updateGenerateButton();
+      });
+      elements.managementClass.addEventListener("change", (event) => {
+        state.managementClass = event.target.value;
+        updateGenerateButton();
+      });
+      elements.generateClassButton.addEventListener("click", generateClassList);
+      elements.printButton.addEventListener("click", () => window.print());
+      elements.closeClassListButton.addEventListener("click", () => {
+        state.classList = [];
+        elements.classListSection.hidden = true;
+      });
+      ["click", "keydown", "mousemove", "touchstart", "input"].forEach((eventName) => {
+        window.addEventListener(eventName, resetAdminIdleTimer);
+      });
+    }
+
+    function cleanText(value) {
+      const text = String(value ?? "").replace(/\uFEFF/g, "").replace(/\s+/g, " ").trim();
+      if (!text || /^(undefined|null|nan)$/i.test(text)) return "";
+      return text;
+    }
+
+    function displayValue(value, fallback = "-") {
+      return cleanText(value) || fallback;
+    }
+
+    function normalizeName(value) {
+      return cleanText(value).toLocaleLowerCase("ms-MY");
+    }
+
+    function normalizeHeaderKey(value) {
+      return normalizeName(value).replace(/[^a-z0-9]/g, "");
+    }
+
+    function escapeHtml(value) {
+      return cleanText(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value);
+    }
+
+    function isConfiguredUrl(value) {
+      const text = cleanText(value);
+      return /^https?:\/\//i.test(text) && !text.startsWith("[");
+    }
+
+    function parseCsv(csvText) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+
+      for (let index = 0; index < csvText.length; index += 1) {
+        const char = csvText[index];
+        const next = csvText[index + 1];
+
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            cell += '"';
+            index += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+
+        if (char === "," && !inQuotes) {
+          row.push(cell);
+          cell = "";
+          continue;
+        }
+
+        if ((char === "\n" || char === "\r") && !inQuotes) {
+          if (char === "\r" && next === "\n") index += 1;
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+          continue;
+        }
+
+        cell += char;
+      }
+
+      row.push(cell);
+      rows.push(row);
+
+      const meaningfulRows = rows
+        .map((cells) => cells.map(cleanText))
+        .filter((cells) => cells.some(Boolean));
+
+      if (!meaningfulRows.length) return { headers: [], records: [] };
+
+      const headers = meaningfulRows[0].map(normalizeHeaderKey);
+      const records = meaningfulRows.slice(1).map((cells) => {
+        const record = {};
+        headers.forEach((header, index) => {
+          if (header) record[header] = cleanText(cells[index]);
+        });
+        return record;
+      });
+
+      return { headers, records };
+    }
+
+    function pickValue(record, keys) {
+      for (const key of keys) {
+        const normalizedKey = normalizeHeaderKey(key);
+        if (cleanText(record[normalizedKey])) return cleanText(record[normalizedKey]);
+      }
+      return "";
+    }
+
+    function normalizeGender(value) {
+      const text = cleanText(value).toLocaleUpperCase("ms-MY");
+      if (["L", "LELAKI", "MALE", "M"].includes(text)) return "LELAKI";
+      if (["P", "PEREMPUAN", "FEMALE", "F"].includes(text)) return "PEREMPUAN";
+      return "";
+    }
+
+    function normalizeHouse(value) {
+      const text = cleanText(value).toLocaleUpperCase("ms-MY");
+      if (text.includes("MERAH") || text === "RED") return "MERAH";
+      if (text.includes("BIRU") || text === "BLUE") return "BIRU";
+      if (text.includes("HIJAU") || text === "GREEN") return "HIJAU";
+      if (text.includes("KUNING") || text === "YELLOW") return "KUNING";
+      return "";
+    }
+
+    function normalizeMedical(value) {
+      const text = cleanText(value);
+      const upper = text.toLocaleUpperCase("ms-MY");
+      if (!text || ["-", "TIADA", "TIADA SEJARAH", "SIHAT", "NIL", "NONE", "NO"].includes(upper)) return "";
+      return text;
+    }
+
+    function parseClass(value) {
+      const kelas = cleanText(value).toLocaleUpperCase("ms-MY");
+      const direct = kelas.match(/^([1-6])\s+(.+)$/);
+      const withYear = kelas.match(/^TAHUN\s*([1-6])\s+(.+)$/);
+      const loose = kelas.match(/\b([1-6])\b\s*([A-Z0-9 ]+)?/);
+      const match = direct || withYear || loose;
+      const tahun = match ? Number.parseInt(match[1], 10) : null;
+      const namaKelas = cleanText(match?.[2] || "");
+      return { kelas, tahun: Number.isFinite(tahun) ? tahun : null, namaKelas };
+    }
+
+    function medicalIcon(value) {
+      const text = cleanText(value).toLocaleLowerCase("ms-MY");
+      if (!text) return "✅";
+      if (text.includes("asma") || text.includes("asthma")) return "🫁";
+      if (text.includes("diabetes") || text.includes("kencing manis")) return "💉";
+      if (text.includes("alahan") || text.includes("allerg")) return "🤧";
+      if (text.includes("jantung") || text.includes("heart")) return "❤️";
+      if (text.includes("darah tinggi") || text.includes("hipertensi")) return "🩺";
+      if (text.includes("g6pd")) return "🧬";
+      if (text.includes("epilepsi") || text.includes("sawan")) return "🧠";
+      if (text.includes("mata") || text.includes("penglihatan")) return "👁️";
+      if (text.includes("gigi")) return "🦷";
+      return "🏥";
+    }
+
+    function medicalFilterLabel(value) {
+      const text = normalizeMedical(value);
+      const lower = text.toLocaleLowerCase("ms-MY");
+      if (!text) return "";
+      if (lower.includes("asma") || lower.includes("asthma")) return "Asma";
+      if (lower.includes("diabetes") || lower.includes("kencing manis")) return "Diabetes / Kencing Manis";
+      if (lower.includes("alahan") || lower.includes("allerg")) return "Alahan";
+      if (lower.includes("jantung") || lower.includes("heart")) return "Penyakit Jantung";
+      if (lower.includes("darah tinggi") || lower.includes("hipertensi")) return "Darah Tinggi";
+      if (lower.includes("g6pd")) return "G6PD";
+      if (lower.includes("epilepsi") || lower.includes("sawan")) return "Epilepsi / Sawan";
+      if (lower.includes("mata") || lower.includes("penglihatan")) return "Masalah Mata";
+      if (lower.includes("gigi")) return "Masalah Gigi";
+      return displayValue(text);
+    }
+
+    function maskNoKP(value) {
+      const text = cleanText(value);
+      const digits = text.replace(/\D/g, "");
+      if (digits.length >= 10) return `${digits.slice(0, 6)}-${digits.slice(6, 8)}-XXXX`;
+      if (text.length > 4) return `${text.slice(0, Math.max(0, text.length - 4))}XXXX`;
+      return text;
+    }
+
+    function sortStudents(students) {
+      return [...students].sort((a, b) => {
+        const yearA = a.tahun ?? 99;
+        const yearB = b.tahun ?? 99;
+        if (yearA !== yearB) return yearA - yearB;
+        const classCompare = a.kelas.localeCompare(b.kelas, "ms-MY");
+        if (classCompare !== 0) return classCompare;
+        return a.nama.localeCompare(b.nama, "ms-MY");
+      });
+    }
+
+    function extraRecordFromRow(record) {
+      return {
+        nama: pickValue(record, ["namamurid", "nama", "namapelajar", "murid", "pelajar"]),
+        noKP: pickValue(record, ["nokp", "nokadpengenalan", "kadpengenalan", "ic", "nric", "noic"]),
+        rumahSukan: pickValue(record, ["rumahsukan", "rumah", "sukan", "sportshouse", "house"]),
+        sejarahPerubatan: pickValue(record, ["sejarahperubatan", "perubatan", "rekodperubatan", "medicalhistory", "kesihatan"])
+      };
+    }
+
+    function buildStudentsFromCsv(mainCsv, extraCsv = null) {
+      const mainTable = parseCsv(mainCsv);
+      const extraTable = extraCsv ? parseCsv(extraCsv) : null;
+      if (!mainTable.headers.includes("namamurid") || !mainTable.headers.includes("kelas") || !mainTable.headers.includes("jantina")) {
+        throw new Error("Format kolum data utama tidak betul. Pastikan kolum Nama Murid, Kelas dan Jantina wujud.");
+      }
+      if (!mainTable.records.length) throw new Error("Tiada data murid ditemui dalam data utama.");
+
+      const extraMap = new Map();
+      const warnings = [];
+
+      if (extraTable && extraTable.records.length) {
+        if (!extraTable.headers.includes("namamurid")) {
+          warnings.push("Format kolum data tambahan tidak lengkap. Maklumat No K/P atau rumah sukan mungkin belum tersedia.");
+        } else {
+          extraTable.records.forEach((record) => {
+            const extra = extraRecordFromRow(record);
+            const key = normalizeName(extra.nama);
+            if (key) extraMap.set(key, extra);
+          });
+        }
+      }
+
+      let matchedExtra = 0;
+      const students = mainTable.records.reduce((list, record, index) => {
+        const nama = pickValue(record, ["namamurid", "nama", "namapelajar", "murid", "pelajar"]);
+        const key = normalizeName(nama);
+        if (!key) return list;
+        const extra = extraMap.get(key);
+        if (extra) matchedExtra += 1;
+        const classInfo = parseClass(pickValue(record, ["kelas", "class"]));
+        list.push({
+          id: `${key}-${index}`,
+          nama: displayValue(nama),
+          kelas: displayValue(classInfo.kelas),
+          tahun: classInfo.tahun,
+          namaKelas: displayValue(classInfo.namaKelas),
+          jantina: normalizeGender(pickValue(record, ["jantina", "gender"])),
+          noKP: cleanText(extra?.noKP),
+          rumahSukan: normalizeHouse(extra?.rumahSukan),
+          sejarahPerubatan: normalizeMedical(extra?.sejarahPerubatan || pickValue(record, ["sejarahperubatan", "perubatan", "rekodperubatan", "medicalhistory", "kesihatan"]))
+        });
+        return list;
+      }, []);
+
+      if (!students.length) throw new Error("Tiada data murid yang mempunyai nama ditemui.");
+
+      if (extraMap.size && matchedExtra === 0) {
+        warnings.push("Data tambahan dimuatkan tetapi tiada padanan nama murid ditemui.");
+      }
+
+      return { students: sortStudents(students), warnings };
+    }
+
+    function mergeSensitiveRecords(records) {
+      const sensitiveMap = new Map(
+        records
+          .map(extraRecordFromRow)
+          .filter((record) => normalizeName(record.nama))
+          .map((record) => [normalizeName(record.nama), record])
+      );
+
+      state.students = sortStudents(state.students.map((student) => {
+        const extra = sensitiveMap.get(normalizeName(student.nama));
+        if (!extra) return student;
+        return {
+          ...student,
+          noKP: cleanText(extra.noKP) || student.noKP,
+          rumahSukan: normalizeHouse(extra.rumahSukan) || student.rumahSukan,
+          sejarahPerubatan: normalizeMedical(extra.sejarahPerubatan) || student.sejarahPerubatan
+        };
+      }));
+    }
+
+    async function fetchCsv(url, label) {
+      if (!isConfiguredUrl(url)) throw new Error(`${label} belum dikonfigurasi.`);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 20000);
+      try {
+        const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error(`${label} tidak dapat dicapai (${response.status}).`);
+        const text = await response.text();
+        if (/^\s*</.test(text)) {
+          throw new Error(`${label} tidak kelihatan seperti CSV. Sila pastikan Google Sheet telah diterbitkan sebagai CSV.`);
+        }
+        return text;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function postAppsScript(payload) {
+      if (!isConfiguredUrl(SYSTEM_CONFIG.appsScriptUrl)) {
+        throw new Error("URL Google Apps Script belum dikonfigurasi. Keselamatan admin tidak boleh disahkan dari bahagian hadapan sahaja.");
+      }
+      const response = await fetch(SYSTEM_CONFIG.appsScriptUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error("Pengesahan admin gagal. Sila cuba semula.");
+      try {
+        return JSON.parse(await response.text());
+      } catch {
+        throw new Error("Respons Google Apps Script tidak sah.");
+      }
+    }
+
+    async function loadStudents(force) {
+      setLoading(true);
+      showToast("info", "Data sedang dimuatkan.");
+      if (force) sessionStorage.removeItem(CACHE_KEY);
+
+      if (!force && isConfiguredUrl(SYSTEM_CONFIG.mainCsvUrl)) {
+        try {
+          const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "");
+          if (cached?.students?.length) {
+            state.students = sortStudents(cached.students);
+            elements.lastLoaded.textContent = `Data terakhir dimuatkan: ${cached.lastLoaded}`;
+            elements.dataStatus.textContent = `${state.students.length} rekod pelajar dimuatkan daripada cache sesi.`;
+            showToast("success", `✅ ${state.students.length} rekod pelajar berjaya dimuatkan!`);
+            setLoading(false);
+            rebuildFilterOptions();
+            applyFiltersAndRender();
+            return;
+          }
+        } catch {
+          sessionStorage.removeItem(CACHE_KEY);
+        }
+      }
+
+      if (!isConfiguredUrl(SYSTEM_CONFIG.mainCsvUrl)) {
+        state.students = [];
+        elements.dataStatus.textContent = "URL CSV data utama belum dikonfigurasi. Gantikan placeholder dalam kod sebelum digunakan.";
+        showToast("warning", "Data gagal dimuatkan kerana URL CSV belum lengkap.");
+        setLoading(false);
+        applyFiltersAndRender();
+        return;
+      }
+
+      try {
+        const mainCsvPromise = fetchCsv(SYSTEM_CONFIG.mainCsvUrl, "URL CSV data utama");
+        const extraCsvPromise = SYSTEM_CONFIG.loadAdditionalCsvBeforeAdmin && isConfiguredUrl(SYSTEM_CONFIG.additionalCsvUrl)
+          ? fetchCsv(SYSTEM_CONFIG.additionalCsvUrl, "URL CSV data tambahan")
+          : Promise.resolve(null);
+        const [mainCsv, extraCsvResult] = await Promise.allSettled([mainCsvPromise, extraCsvPromise]);
+
+        if (mainCsv.status === "rejected") throw mainCsv.reason;
+        const extraCsv = extraCsvResult.status === "fulfilled" ? extraCsvResult.value : null;
+        const result = buildStudentsFromCsv(mainCsv.value, extraCsv);
+        state.students = result.students;
+        const timestamp = formatDateTime(new Date());
+        elements.lastLoaded.textContent = `Data terakhir dimuatkan: ${timestamp}`;
+        elements.dataStatus.textContent = `${state.students.length} rekod pelajar tersedia.`;
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ students: state.students, lastLoaded: timestamp }));
+        showToast("success", `✅ ${state.students.length} rekod pelajar berjaya dimuatkan!`);
+
+        if (SYSTEM_CONFIG.loadAdditionalCsvBeforeAdmin && extraCsvResult.status === "rejected") {
+          showToast("warning", "Data utama berjaya dimuatkan, tetapi data tambahan tidak dapat dicapai.");
+        }
+
+        result.warnings.forEach((warning) => showToast("warning", warning));
+      } catch (error) {
+        const offlineMessage = !navigator.onLine ? "Sambungan internet terputus. Sila semak sambungan dan cuba semula." : "";
+        const message = error instanceof Error
+          ? error.message
+          : "Data pelajar tidak dapat dimuatkan. Sila pastikan Google Sheet telah diterbitkan sebagai CSV dan cuba semula.";
+        state.students = [];
+        elements.dataStatus.textContent = offlineMessage || message;
+        showToast("error", offlineMessage || message);
+      } finally {
+        setLoading(false);
+        rebuildFilterOptions();
+        applyFiltersAndRender();
+      }
+    }
+
+    function setLoading(isLoading) {
+      state.loading = isLoading;
+      elements.reloadButton.disabled = isLoading;
+      elements.reloadIcon.classList.toggle("spin", isLoading);
+      elements.loadingState.hidden = !isLoading;
+      if (isLoading) elements.dataStatus.textContent = LOADING_MESSAGE;
+    }
+
+    function rebuildFilterOptions() {
+      populateYears();
+      populateClassFilter();
+      populateMedicalOptions();
+      populateManagementYears();
+      populateManagementClasses();
+    }
+
+    function populateYears() {
+      const years = [...new Set(state.students.map((student) => student.tahun).filter(Boolean))].sort((a, b) => a - b);
+      elements.yearFilter.innerHTML = `<option value="all">Semua Tahun</option>${years.map((year) => `<option value="${year}">Tahun ${year}</option>`).join("")}`;
+      elements.yearFilter.value = state.filters.tahun;
+    }
+
+    function populateClassFilter() {
+      const classes = [...new Set(state.students
+        .filter((student) => state.filters.tahun === "all" || String(student.tahun) === state.filters.tahun)
+        .map((student) => student.kelas)
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "ms-MY"));
+
+      elements.classFilter.innerHTML = `<option value="all">Semua Kelas</option>${classes.map((className) => `<option value="${escapeAttribute(className)}">${escapeHtml(className)}</option>`).join("")}`;
+      if (!classes.includes(state.filters.kelas)) state.filters.kelas = "all";
+      elements.classFilter.value = state.filters.kelas;
+    }
+
+    function populateMedicalOptions() {
+      const options = [...new Set(state.students.map((student) => medicalFilterLabel(student.sejarahPerubatan)).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "ms-MY"));
+      elements.medicalFilter.innerHTML = `
+        <option value="all">Semua Murid</option>
+        <option value="ada">Ada Sejarah Perubatan</option>
+        <option value="tiada">Tiada Sejarah Perubatan</option>
+        ${options.map((option) => `<option value="condition:${escapeAttribute(option)}">${escapeHtml(option)}</option>`).join("")}
+      `;
+      elements.medicalFilter.value = state.filters.perubatan;
+    }
+
+    function populateManagementYears() {
+      const years = [...new Set(state.students.map((student) => student.tahun).filter(Boolean))].sort((a, b) => a - b);
+      elements.managementYear.innerHTML = `<option value="">Pilih Tahun</option>${years.map((year) => `<option value="${year}">Tahun ${year}</option>`).join("")}`;
+      elements.managementYear.value = state.managementYear;
+    }
+
+    function populateManagementClasses() {
+      const classes = [...new Set(state.students
+        .filter((student) => String(student.tahun) === state.managementYear)
+        .map((student) => student.kelas)
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "ms-MY"));
+      elements.managementClass.disabled = !state.managementYear;
+      elements.managementClass.innerHTML = `<option value="">Pilih Kelas</option>${classes.map((className) => `<option value="${escapeAttribute(className)}">${escapeHtml(className)}</option>`).join("")}`;
+      if (!classes.includes(state.managementClass)) state.managementClass = "";
+      elements.managementClass.value = state.managementClass;
+    }
+
+    function updateGenerateButton() {
+      elements.generateClassButton.disabled = !state.managementYear || !state.managementClass;
+    }
+
+    function updateHouseButtons() {
+      elements.houseButtons.querySelectorAll("[data-house]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.house === state.filters.rumahSukan);
+      });
+    }
+
+    function applyFiltersAndRender() {
+      const search = normalizeName(state.debouncedSearch);
+      state.filteredStudents = sortStudents(state.students.filter((student) => {
+        if (search) {
+          const fields = [student.nama, student.kelas, student.rumahSukan];
+          if (state.adminActive) fields.push(student.noKP);
+          if (!fields.map(normalizeName).join(" ").includes(search)) return false;
+        }
+        if (state.filters.tahun !== "all" && String(student.tahun) !== state.filters.tahun) return false;
+        if (state.filters.kelas !== "all" && student.kelas !== state.filters.kelas) return false;
+        if (state.filters.jantina !== "all" && student.jantina !== state.filters.jantina) return false;
+        if (state.filters.rumahSukan !== "all" && student.rumahSukan !== state.filters.rumahSukan) return false;
+        if (state.filters.perubatan === "ada" && !student.sejarahPerubatan) return false;
+        if (state.filters.perubatan === "tiada" && student.sejarahPerubatan) return false;
+        if (state.filters.perubatan.startsWith("condition:") && medicalFilterLabel(student.sejarahPerubatan) !== state.filters.perubatan.replace("condition:", "")) return false;
+        return true;
+      }));
+
+      const noResultKey = JSON.stringify({ q: state.debouncedSearch, filters: state.filters, total: state.students.length });
+      if (!state.loading && state.students.length && !state.filteredStudents.length && state.noResultToastKey !== noResultKey) {
+        state.noResultToastKey = noResultKey;
+        showToast("info", "Tiada data murid dijumpai.");
+      }
+
+      renderResults();
+    }
+
+    function render() {
+      updateHouseButtons();
+      applyFiltersAndRender();
+      elements.managementSection.hidden = !state.adminActive;
+      elements.adminNotice.hidden = !state.adminActive;
+      elements.logoutButton.hidden = !state.adminActive;
+      elements.adminButton.className = `button ${state.adminActive ? "button-green" : "button-white"}`;
+      elements.adminButton.innerHTML = state.adminActive ? "<span>✅</span><span>Admin Aktif</span>" : "<span>🔐</span><span>Admin</span>";
+    }
+
+    function renderResults() {
+      elements.resultCount.textContent = `${state.filteredStudents.length} pelajar dijumpai`;
+      elements.loadingState.hidden = !state.loading;
+      elements.emptyState.hidden = state.loading || state.filteredStudents.length > 0;
+      elements.results.hidden = state.loading || state.filteredStudents.length === 0;
+      elements.results.className = state.viewMode === "grid" ? "grid-results" : "list-results";
+      elements.results.innerHTML = state.filteredStudents.map((student) => state.viewMode === "grid" ? renderStudentCard(student) : renderStudentRow(student)).join("");
+    }
+
+    function renderStudentCard(student) {
+      return `
+        <article class="student-card">
+          <div class="student-top">
+            ${renderAvatar(student)}
+            <div style="min-width:0;flex:1;">
+              <h3 class="student-name">${escapeHtml(student.nama)}</h3>
+              <p class="student-class">Kelas ${escapeHtml(displayValue(student.kelas))}</p>
+            </div>
+          </div>
+          <div class="badge-row">${renderGenderBadge(student.jantina)}${renderHouseBadge(student.rumahSukan)}</div>
+          ${renderMedicalBox(student.sejarahPerubatan)}
+          ${state.adminActive ? renderIdentityBox(student.noKP) : ""}
+        </article>
+      `;
+    }
+
+    function renderStudentRow(student) {
+      return `
+        <article class="student-row">
+          <div class="student-row-inner">
+            ${renderAvatar(student)}
+            <div style="min-width:0;flex:1;">
+              <div style="display:flex;flex-direction:column;gap:.5rem;">
+                <div>
+                  <h3 class="student-name">${escapeHtml(student.nama)}</h3>
+                  <p class="student-class">Kelas ${escapeHtml(displayValue(student.kelas))}</p>
+                </div>
+                <div class="badge-row" style="margin-top:0;">${renderGenderBadge(student.jantina)}${renderHouseBadge(student.rumahSukan)}</div>
+              </div>
+              ${student.sejarahPerubatan ? `<p style="margin:.75rem 0 0;color:#be123c;font-size:.9rem;">${medicalIcon(student.sejarahPerubatan)} ${escapeHtml(student.sejarahPerubatan)}</p>` : ""}
+              ${state.adminActive ? renderIdentityBox(student.noKP) : ""}
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderAvatar(student) {
+      const className = student.jantina === "LELAKI" ? "avatar-lelaki" : student.jantina === "PEREMPUAN" ? "avatar-perempuan" : "avatar-lain";
+      return `<div class="avatar ${className}" aria-hidden="true">👤</div>`;
+    }
+
+    function renderGenderBadge(gender) {
+      if (gender === "LELAKI") return `<span class="pill gender-lelaki">♂ LELAKI</span>`;
+      if (gender === "PEREMPUAN") return `<span class="pill gender-perempuan">♀ PEREMPUAN</span>`;
+      return `<span class="pill gender-lain">JANTINA -</span>`;
+    }
+
+    function renderHouseBadge(house) {
+      const key = cleanText(house).toLocaleLowerCase("ms-MY");
+      const className = key ? `badge-${key}` : "house-empty";
+      return `<span class="pill ${className}">${escapeHtml(house || "Tiada rumah")}</span>`;
+    }
+
+    function renderMedicalBox(value) {
+      if (!value) return "";
+      return `<div class="medical-box">${medicalIcon(value)} <strong>Sejarah perubatan:</strong> ${escapeHtml(value)}</div>`;
+    }
+
+    function renderIdentityBox(noKP) {
+      const display = noKP ? (SYSTEM_CONFIG.maskIdentityNumber ? maskNoKP(noKP) : noKP) : "-";
+      return `<div class="identity-box"><strong>No K/P:</strong> ${escapeHtml(display)}</div>`;
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      elements.gridViewButton.classList.toggle("active", mode === "grid");
+      elements.listViewButton.classList.toggle("active", mode === "list");
+      renderResults();
+    }
+
+    function resetFilters() {
+      state.searchText = "";
+      state.debouncedSearch = "";
+      state.filters = { ...DEFAULT_FILTERS };
+      state.managementYear = "";
+      state.managementClass = "";
+      state.classList = [];
+      elements.searchInput.value = "";
+      elements.clearSearchButton.style.display = "none";
+      elements.yearFilter.value = "all";
+      elements.genderFilter.value = "all";
+      elements.medicalFilter.value = "all";
+      elements.classListSection.hidden = true;
+      rebuildFilterOptions();
+      updateHouseButtons();
+      updateGenerateButton();
+      applyFiltersAndRender();
+    }
+
+    function openAdminModal() {
+      if (state.adminActive) return;
+      elements.adminError.style.display = "none";
+      elements.adminError.textContent = "";
+      elements.adminPassword.value = "";
+      elements.adminModal.classList.add("active");
+      setTimeout(() => elements.adminPassword.focus(), 50);
+    }
+
+    function closeAdminModal() {
+      elements.adminModal.classList.remove("active");
+    }
+
+    async function handleAdminSubmit(event) {
+      event.preventDefault();
+      elements.adminError.style.display = "none";
+      elements.adminError.textContent = "";
+
+      const password = cleanText(elements.adminPassword.value);
+      if (!password) {
+        setAdminError("Sila masukkan kata laluan admin.");
+        return;
+      }
+
+      elements.unlockButton.disabled = true;
+      elements.unlockButton.textContent = "↻ Menyemak...";
+
+      try {
+        const loginResponse = await postAppsScript({ action: "login", password });
+        const success = Boolean(loginResponse.ok ?? loginResponse.success);
+        const token = cleanText(loginResponse.token ?? loginResponse.sessionToken ?? loginResponse.adminToken);
+        if (!success || !token) throw new Error("Kata laluan admin salah.");
+
+        let sensitiveRecords = extractSensitiveRecords(loginResponse);
+        if (!sensitiveRecords.length) {
+          const dataResponse = await postAppsScript({ action: "getSensitiveData", token });
+          const dataSuccess = Boolean(dataResponse.ok ?? dataResponse.success ?? true);
+          if (!dataSuccess) throw new Error("Pengesahan admin gagal semasa mengambil data sensitif.");
+          sensitiveRecords = extractSensitiveRecords(dataResponse);
+        }
+
+        if (sensitiveRecords.length) mergeSensitiveRecords(sensitiveRecords);
+        state.adminActive = true;
+        state.adminToken = token;
+        closeAdminModal();
+        showToast("success", "Mod admin berjaya diaktifkan.");
+        rebuildFilterOptions();
+        render();
+        resetAdminIdleTimer();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Pengesahan admin gagal.";
+        setAdminError(message);
+        showToast("error", message.includes("Kata laluan") ? "Kata laluan admin salah." : message);
+      } finally {
+        elements.unlockButton.disabled = false;
+        elements.unlockButton.textContent = "🔓 Buka Kunci";
+      }
+    }
+
+    function setAdminError(message) {
+      elements.adminError.textContent = message;
+      elements.adminError.style.display = "block";
+    }
+
+    function extractSensitiveRecords(payload) {
+      if (!payload || typeof payload !== "object") return [];
+      const arrayPayload = payload.records ?? payload.data ?? payload.students;
+      if (Array.isArray(arrayPayload)) {
+        return arrayPayload.map((record) => {
+          if (!record || typeof record !== "object") return {};
+          return Object.fromEntries(Object.entries(record).map(([key, value]) => [key, cleanText(value)]));
+        });
+      }
+      if (typeof payload.csv === "string") return parseCsv(payload.csv).records;
+      return [];
+    }
+
+    function logoutAdmin(reason) {
+      if (state.adminToken && isConfiguredUrl(SYSTEM_CONFIG.appsScriptUrl)) {
+        postAppsScript({ action: "logout", token: state.adminToken }).catch(() => {});
+      }
+      state.adminActive = false;
+      state.adminToken = "";
+      state.classList = [];
+      elements.classListSection.hidden = true;
+      clearTimeout(adminIdleTimer);
+      showToast(reason === "timeout" ? "warning" : "info", reason === "timeout" ? "Sesi admin tamat." : "Mod admin telah ditutup.");
+      render();
+    }
+
+    function resetAdminIdleTimer() {
+      if (!state.adminActive) return;
+      clearTimeout(adminIdleTimer);
+      adminIdleTimer = setTimeout(() => logoutAdmin("timeout"), SYSTEM_CONFIG.adminSessionMinutes * 60 * 1000);
+    }
+
+    function generateClassList() {
+      if (!state.managementYear || !state.managementClass) return;
+      state.classList = sortStudents(state.students.filter((student) => String(student.tahun) === state.managementYear && student.kelas === state.managementClass));
+      if (!state.classList.length) {
+        showToast("info", "Tiada data murid dijumpai.");
+      } else {
+        showToast("success", "Senarai kelas berjaya dijana.");
+      }
+      renderClassList();
+    }
+
+    function renderClassList() {
+      elements.classListSection.hidden = state.classList.length === 0;
+      const total = state.classList.length;
+      const male = state.classList.filter((student) => student.jantina === "LELAKI").length;
+      const female = state.classList.filter((student) => student.jantina === "PEREMPUAN").length;
+      elements.summaryTotal.textContent = total;
+      elements.summaryMale.textContent = male;
+      elements.summaryFemale.textContent = female;
+      elements.classListMeta.textContent = `Tahun ${displayValue(state.managementYear)} · Kelas ${displayValue(state.managementClass)}`;
+      elements.printMeta.textContent = `Tahun ${displayValue(state.managementYear)} · Kelas ${displayValue(state.managementClass)} · Tarikh cetakan: ${formatDateTime(new Date())}`;
+      elements.classListBody.innerHTML = state.classList.map((student, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td><strong>${escapeHtml(student.nama)}</strong></td>
+          <td>${escapeHtml(student.noKP ? (SYSTEM_CONFIG.maskIdentityNumber ? maskNoKP(student.noKP) : student.noKP) : "-")}</td>
+          <td>${escapeHtml(displayValue(student.jantina))}</td>
+          <td>${renderHouseBadge(student.rumahSukan)}</td>
+          <td>${escapeHtml(displayValue(student.kelas))}</td>
+          <td>${student.sejarahPerubatan ? `${medicalIcon(student.sejarahPerubatan)} ${escapeHtml(student.sejarahPerubatan)}` : "-"}</td>
+        </tr>
+      `).join("");
+      elements.classListSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function formatDateTime(date) {
+      return new Intl.DateTimeFormat("ms-MY", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function showToast(type, message) {
+      const toast = document.createElement("div");
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      elements.toastWrap.appendChild(toast);
+      setTimeout(() => toast.remove(), 4200);
+    }
+  </script>
+</body>
+</html>
