@@ -1350,12 +1350,13 @@
       mainCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLWk-tTzAdaDdUW2jfCi1LqA25kPuaCDSUsJL6OYOa__EgnE4tHOt93nPV_-MLqwQdMCks4ZoPgCvD/pub?gid=0&single=true&output=csv",
       additionalCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLWk-tTzAdaDdUW2jfCi1LqA25kPuaCDSUsJL6OYOa__EgnE4tHOt93nPV_-MLqwQdMCks4ZoPgCvD/pub?gid=1605065552&single=true&output=csv",
       appsScriptUrl: "https://script.google.com/macros/s/AKfycby5UJhujNUfQylBXo-slnRuMGB-J24uSIqNQ2CmSHBjD_B7FYx1LTKdhsdqSZSqpxiv/exec",
+      adminPasswordSha256: "61c52584348c891ffaf15c945e9cbe58e8235c4024e4a2a5265445e12b57ce7d",
       adminSessionMinutes: 15,
       loadAdditionalCsvBeforeAdmin: true,
-      maskIdentityNumber: true
+      maskIdentityNumber: false
     };
 
-    const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v2";
+    const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v3";
     const LOADING_MESSAGE = "Memuatkan data pelajar daripada Google Sheets...";
     const DEFAULT_FILTERS = {
       tahun: "all",
@@ -1754,7 +1755,7 @@
           tahun: classInfo.tahun,
           namaKelas: displayValue(classInfo.namaKelas),
           jantina: normalizeGender(pickValue(record, ["jantina", "gender"])),
-          noKP: "",
+          noKP: cleanText(extra?.noKP),
           rumahSukan: normalizeHouse(extra?.rumahSukan),
           sejarahPerubatan: normalizeMedical(extra?.sejarahPerubatan || pickValue(record, ["sejarahperubatan", "perubatan", "rekodperubatan", "medicalhistory", "kesihatan"]))
         });
@@ -2122,6 +2123,15 @@
       elements.adminModal.classList.remove("active");
     }
 
+    async function sha256Hex(value) {
+      if (!globalThis.crypto?.subtle) {
+        throw new Error("Pelayar ini tidak menyokong pengesahan admin. Sila gunakan Chrome, Edge atau Safari versi terkini.");
+      }
+      const bytes = new TextEncoder().encode(String(value || ""));
+      const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+      return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    }
+
     async function handleAdminSubmit(event) {
       event.preventDefault();
       elements.adminError.style.display = "none";
@@ -2137,22 +2147,13 @@
       elements.unlockButton.textContent = "↻ Menyemak...";
 
       try {
-        const loginResponse = await postAppsScript({ action: "login", password });
-        const success = Boolean(loginResponse.ok ?? loginResponse.success);
-        const token = cleanText(loginResponse.token ?? loginResponse.sessionToken ?? loginResponse.adminToken);
-        if (!success || !token) throw new Error("Kata laluan admin salah.");
-
-        let sensitiveRecords = extractSensitiveRecords(loginResponse);
-        if (!sensitiveRecords.length) {
-          const dataResponse = await postAppsScript({ action: "getSensitiveData", token });
-          const dataSuccess = Boolean(dataResponse.ok ?? dataResponse.success ?? true);
-          if (!dataSuccess) throw new Error("Pengesahan admin gagal semasa mengambil data sensitif.");
-          sensitiveRecords = extractSensitiveRecords(dataResponse);
+        const enteredHash = await sha256Hex(password);
+        if (enteredHash !== SYSTEM_CONFIG.adminPasswordSha256) {
+          throw new Error("Kata laluan admin salah.");
         }
 
-        if (sensitiveRecords.length) mergeSensitiveRecords(sensitiveRecords);
         state.adminActive = true;
-        state.adminToken = token;
+        state.adminToken = `local-${Date.now()}`;
         closeAdminModal();
         showToast("success", "Mod admin berjaya diaktifkan.");
         rebuildFilterOptions();
@@ -2187,7 +2188,7 @@
     }
 
     function logoutAdmin(reason) {
-      if (state.adminToken && isConfiguredUrl(SYSTEM_CONFIG.appsScriptUrl)) {
+      if (state.adminToken && !state.adminToken.startsWith("local-") && isConfiguredUrl(SYSTEM_CONFIG.appsScriptUrl)) {
         postAppsScript({ action: "logout", token: state.adminToken }).catch(() => {});
       }
       state.adminActive = false;
