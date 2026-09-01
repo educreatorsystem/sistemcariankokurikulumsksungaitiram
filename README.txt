@@ -3,6 +3,13 @@ SISTEM CARIAN PELAJAR - SEKOLAH KEBANGSAAN SUNGAI TIRAM
 Fail utama:
 - sistem-carian-pelajar-standalone.html
 
+Fail GitHub/PWA:
+- index.html
+- manifest.webmanifest
+- service-worker.js
+- offline.html
+- folder icons
+
 Fail ini ialah versi satu fail yang mengandungi HTML, CSS dan JavaScript.
 Ia sesuai untuk dimuat naik semula ke ChatGPT, Canva Code atau Gemini Canvas untuk diedit.
 
@@ -29,6 +36,20 @@ CARA PUBLISH KE GITHUB PAGES
 3. Buka Settings > Pages.
 4. Pilih Deploy from a branch, branch main dan folder /(root).
 5. Simpan dan tunggu pautan GitHub Pages disediakan.
+
+CARA PASANG SEBAGAI APLIKASI
+Android (Chrome):
+1. Buka pautan GitHub Pages.
+2. Tekan menu tiga titik.
+3. Pilih Install app atau Add to Home screen.
+
+iPhone/iPad (Safari):
+1. Buka pautan GitHub Pages menggunakan Safari.
+2. Tekan butang Share.
+3. Pilih Add to Home Screen.
+4. Tekan Add.
+
+Nota: PWA memerlukan HTTPS. GitHub Pages menyediakan HTTPS secara automatik.
 
 CARA AKTIFKAN ADMIN
 1. Tekan butang Admin pada sistem.
