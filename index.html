@@ -581,8 +581,8 @@
 
     .avatar {
       display: flex;
-      width: 3rem;
-      height: 3rem;
+      width: 3.75rem;
+      height: 3.75rem;
       flex: 0 0 auto;
       align-items: center;
       justify-content: center;
@@ -591,6 +591,13 @@
       font-size: 1.2rem;
       border: 3px solid rgba(255,255,255,.9);
       box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+    }
+
+    .avatar svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 3px 5px rgba(15, 23, 42, 0.12));
     }
 
     .avatar-lelaki {
@@ -1344,11 +1351,11 @@
       additionalCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSLWk-tTzAdaDdUW2jfCi1LqA25kPuaCDSUsJL6OYOa__EgnE4tHOt93nPV_-MLqwQdMCks4ZoPgCvD/pub?gid=1605065552&single=true&output=csv",
       appsScriptUrl: "https://script.google.com/macros/s/AKfycby5UJhujNUfQylBXo-slnRuMGB-J24uSIqNQ2CmSHBjD_B7FYx1LTKdhsdqSZSqpxiv/exec",
       adminSessionMinutes: 15,
-      loadAdditionalCsvBeforeAdmin: false,
+      loadAdditionalCsvBeforeAdmin: true,
       maskIdentityNumber: true
     };
 
-    const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v1";
+    const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v2";
     const LOADING_MESSAGE = "Memuatkan data pelajar daripada Google Sheets...";
     const DEFAULT_FILTERS = {
       tahun: "all",
@@ -1511,7 +1518,13 @@
     }
 
     function normalizeName(value) {
-      return cleanText(value).toLocaleLowerCase("ms-MY");
+      return cleanText(value)
+        .normalize("NFKC")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .replace(/[.,;:()]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLocaleLowerCase("ms-MY");
     }
 
     function normalizeHeaderKey(value) {
@@ -1714,7 +1727,14 @@
           extraTable.records.forEach((record) => {
             const extra = extraRecordFromRow(record);
             const key = normalizeName(extra.nama);
-            if (key) extraMap.set(key, extra);
+            if (!key) return;
+            const existing = extraMap.get(key) || {};
+            extraMap.set(key, {
+              nama: extra.nama || existing.nama || "",
+              noKP: extra.noKP || existing.noKP || "",
+              rumahSukan: extra.rumahSukan || existing.rumahSukan || "",
+              sejarahPerubatan: extra.sejarahPerubatan || existing.sejarahPerubatan || ""
+            });
           });
         }
       }
@@ -1734,7 +1754,7 @@
           tahun: classInfo.tahun,
           namaKelas: displayValue(classInfo.namaKelas),
           jantina: normalizeGender(pickValue(record, ["jantina", "gender"])),
-          noKP: cleanText(extra?.noKP),
+          noKP: "",
           rumahSukan: normalizeHouse(extra?.rumahSukan),
           sejarahPerubatan: normalizeMedical(extra?.sejarahPerubatan || pickValue(record, ["sejarahperubatan", "perubatan", "rekodperubatan", "medicalhistory", "kesihatan"]))
         });
@@ -2033,7 +2053,12 @@
 
     function renderAvatar(student) {
       const className = student.jantina === "LELAKI" ? "avatar-lelaki" : student.jantina === "PEREMPUAN" ? "avatar-perempuan" : "avatar-lain";
-      return `<div class="avatar ${className}" aria-hidden="true">👤</div>`;
+      const face = student.jantina === "PEREMPUAN"
+        ? `<svg viewBox="0 0 64 64" role="img" aria-label="Avatar murid perempuan"><path fill="#713f12" d="M13 31C13 16 21 8 32 8s19 8 19 23v18H13V31Z"/><circle cx="32" cy="29" r="15" fill="#fde2c5"/><path fill="#713f12" d="M17 25c1-10 7-15 15-15s14 5 15 15c-5-2-10-6-13-10-4 5-10 8-17 10Z"/><circle cx="27" cy="29" r="1.5" fill="#334155"/><circle cx="37" cy="29" r="1.5" fill="#334155"/><path d="M27 36c3 3 7 3 10 0" fill="none" stroke="#db2777" stroke-width="2" stroke-linecap="round"/><path fill="#f9a8d4" d="M17 58c2-10 8-15 15-15s13 5 15 15H17Z"/></svg>`
+        : student.jantina === "LELAKI"
+          ? `<svg viewBox="0 0 64 64" role="img" aria-label="Avatar murid lelaki"><circle cx="32" cy="29" r="15" fill="#fde2c5"/><path fill="#422006" d="M17 26c0-11 6-18 16-18 8 0 14 4 16 12-5-1-9-3-13-7-4 6-10 10-19 11v2Z"/><circle cx="27" cy="29" r="1.5" fill="#334155"/><circle cx="37" cy="29" r="1.5" fill="#334155"/><path d="M27 36c3 3 7 3 10 0" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/><path fill="#93c5fd" d="M17 58c2-10 8-15 15-15s13 5 15 15H17Z"/><path fill="#fff" d="m28 44 4 5 4-5 3 14H25l3-14Z"/></svg>`
+          : `<svg viewBox="0 0 64 64" role="img" aria-label="Avatar murid"><circle cx="32" cy="25" r="14" fill="#ddd6fe"/><circle cx="27" cy="25" r="1.5" fill="#4c1d95"/><circle cx="37" cy="25" r="1.5" fill="#4c1d95"/><path d="M27 32c3 3 7 3 10 0" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/><path fill="#c4b5fd" d="M15 58c2-12 9-18 17-18s15 6 17 18H15Z"/></svg>`;
+      return `<div class="avatar ${className}">${face}</div>`;
     }
 
     function renderGenderBadge(gender) {

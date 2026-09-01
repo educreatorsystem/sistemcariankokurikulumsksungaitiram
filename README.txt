@@ -8,6 +8,12 @@ Ia sesuai untuk dimuat naik semula ke ChatGPT, Canva Code atau Gemini Canvas unt
 
 Nama sekolah, kod sekolah JBA1021, lencana dan kedua-dua URL CSV telah dimasukkan.
 
+Kaedah penggabungan data:
+- Tab KELAS DAN NAMA MURID menjadi sumber rekod utama.
+- Sistem menormalkan huruf, ruang dan aksara tersembunyi pada Nama Murid.
+- Rumah Sukan dipadankan daripada tab NAMA MURID, RUMAH SUKAN DAN NO K/P hanya apabila nama sama.
+- No K/P hanya dimasukkan ke paparan selepas pengesahan admin.
+
 URL Google Apps Script telah dimasukkan dan mod admin telah dikonfigurasi.
 
 Fail admin:
