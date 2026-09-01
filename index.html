@@ -587,6 +587,8 @@
       box-shadow: var(--shadow);
       transition: transform 180ms ease, box-shadow 180ms ease;
       animation: fade-in 360ms ease both;
+      content-visibility: auto;
+      contain-intrinsic-size: 280px;
     }
 
     .student-card:hover,
@@ -1150,8 +1152,8 @@
     }
 
     @page {
-      size: A4 landscape;
-      margin: 12mm;
+      size: A4;
+      margin: 9mm;
     }
 
     @media print {
@@ -1191,18 +1193,50 @@
       }
 
       table {
-        font-size: 10px;
+        width: 100% !important;
+        table-layout: fixed;
+        border-collapse: collapse;
+        font-size: 8px;
       }
 
       th,
       td {
-        padding: 6px 8px;
+        padding: 4px 5px;
+        overflow-wrap: anywhere;
+        word-break: normal;
+        white-space: normal !important;
+        vertical-align: top;
+      }
+
+      th:nth-child(1), td:nth-child(1) { width: 5%; }
+      th:nth-child(2), td:nth-child(2) { width: 27%; }
+      th:nth-child(3), td:nth-child(3) { width: 17%; }
+      th:nth-child(4), td:nth-child(4) { width: 11%; }
+      th:nth-child(5), td:nth-child(5) { width: 12%; }
+      th:nth-child(6), td:nth-child(6) { width: 10%; }
+      th:nth-child(7), td:nth-child(7) { width: 18%; }
+
+      .table-wrap {
+        overflow: visible !important;
       }
 
       tr {
         break-inside: avoid;
         page-break-inside: avoid;
       }
+    }
+
+    @media print and (orientation: landscape) {
+      table { font-size: 9px; }
+      th, td { padding: 5px 6px; }
+    }
+
+    @media print and (orientation: portrait) {
+      table { font-size: 7px; }
+      th, td { padding: 3px 4px; }
+      .print-heading h2 { font-size: 16px; }
+      .summary-grid { gap: 6px; margin: 8px 0; }
+      .summary-card { padding: 6px; }
     }
   </style>
 </head>
@@ -1242,6 +1276,26 @@
     <div class="container">
       <div id="adminNotice" class="notice notice-admin no-print" hidden>Maklumat ini adalah sulit dan untuk kegunaan rasmi sekolah sahaja.</div>
       <div id="developerWarning" class="notice notice-warning no-print">Amaran pembangun: URL Google Apps Script belum dimasukkan. Mod admin memerlukan pengesahan bahagian pelayan untuk keselamatan penuh.</div>
+
+      <section id="managementSection" class="panel no-print" style="margin-bottom: 1rem;" hidden>
+        <h2>Pengurusan Murid</h2>
+        <p style="margin: 0.4rem 0 0; color: var(--muted); font-weight: 700;">Jana senarai murid mengikut kelas untuk kegunaan dan pengurusan guru.</p>
+        <div class="management-grid">
+          <label class="field">
+            <span>Pilih Tahun</span>
+            <select id="managementYear">
+              <option value="">Pilih Tahun</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Pilih Kelas</span>
+            <select id="managementClass" disabled>
+              <option value="">Pilih Kelas</option>
+            </select>
+          </label>
+          <button id="generateClassButton" class="button button-primary" type="button" disabled>Jana Senarai Murid</button>
+        </div>
+      </section>
 
       <section class="panel no-print">
         <div class="search-row">
@@ -1321,25 +1375,8 @@
           <button id="emptyResetButton" class="button button-primary" type="button" style="margin-top: 1rem;">↺ Reset Tapisan</button>
         </div>
         <div id="results" class="grid-results"></div>
-      </section>
-
-      <section id="managementSection" class="panel no-print" style="margin-top: 2rem;" hidden>
-        <h2>Pengurusan Guru Kelas</h2>
-        <p style="margin: 0.4rem 0 0; color: var(--muted); font-weight: 700;">Jana senarai murid mengikut kelas untuk kegunaan dan pengurusan guru.</p>
-        <div class="management-grid">
-          <label class="field">
-            <span>Pilih Tahun</span>
-            <select id="managementYear">
-              <option value="">Pilih Tahun</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Pilih Kelas</span>
-            <select id="managementClass" disabled>
-              <option value="">Pilih Kelas</option>
-            </select>
-          </label>
-          <button id="generateClassButton" class="button button-primary" type="button" disabled>Jana Senarai Murid</button>
+        <div id="loadMoreWrap" style="display:flex;justify-content:center;margin-top:1.25rem;" hidden>
+          <button id="loadMoreButton" class="button button-primary" type="button">Papar Lagi</button>
         </div>
       </section>
 
@@ -1425,6 +1462,7 @@
 
     const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v3";
     const LOADING_MESSAGE = "Memuatkan data pelajar daripada Google Sheets...";
+    const RESULT_BATCH_SIZE = 60;
     const DEFAULT_FILTERS = {
       tahun: "all",
       kelas: "all",
@@ -1446,6 +1484,7 @@
       classList: [],
       managementYear: "",
       managementClass: "",
+      visibleLimit: RESULT_BATCH_SIZE,
       noResultToastKey: ""
     };
 
@@ -1468,7 +1507,7 @@
         "adminNotice", "developerWarning", "searchInput", "clearSearchButton",
         "gridViewButton", "listViewButton", "resetFiltersButton", "yearFilter",
         "classFilter", "genderFilter", "medicalFilter", "houseButtons",
-        "resultCount", "loadingState", "emptyState", "emptyResetButton", "results",
+        "resultCount", "loadingState", "emptyState", "emptyResetButton", "results", "loadMoreWrap", "loadMoreButton",
         "managementSection", "managementYear", "managementClass",
         "generateClassButton", "classListSection", "printBadge",
         "printSchoolName", "printMeta", "classListMeta", "summaryTotal",
@@ -1514,6 +1553,7 @@
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           state.debouncedSearch = state.searchText;
+          state.visibleLimit = RESULT_BATCH_SIZE;
           applyFiltersAndRender();
         }, 260);
       });
@@ -1522,6 +1562,7 @@
         state.debouncedSearch = "";
         elements.searchInput.value = "";
         elements.clearSearchButton.style.display = "none";
+        state.visibleLimit = RESULT_BATCH_SIZE;
         applyFiltersAndRender();
       });
       elements.gridViewButton.addEventListener("click", () => setViewMode("grid"));
@@ -1533,18 +1574,22 @@
         state.filters.kelas = "all";
         elements.classFilter.value = "all";
         populateClassFilter();
+        state.visibleLimit = RESULT_BATCH_SIZE;
         applyFiltersAndRender();
       });
       elements.classFilter.addEventListener("change", (event) => {
         state.filters.kelas = event.target.value;
+        state.visibleLimit = RESULT_BATCH_SIZE;
         applyFiltersAndRender();
       });
       elements.genderFilter.addEventListener("change", (event) => {
         state.filters.jantina = event.target.value;
+        state.visibleLimit = RESULT_BATCH_SIZE;
         applyFiltersAndRender();
       });
       elements.medicalFilter.addEventListener("change", (event) => {
         state.filters.perubatan = event.target.value;
+        state.visibleLimit = RESULT_BATCH_SIZE;
         applyFiltersAndRender();
       });
       elements.houseButtons.addEventListener("click", (event) => {
@@ -1552,6 +1597,7 @@
         if (!button) return;
         state.filters.rumahSukan = button.dataset.house;
         updateHouseButtons();
+        state.visibleLimit = RESULT_BATCH_SIZE;
         applyFiltersAndRender();
       });
       elements.managementYear.addEventListener("change", (event) => {
@@ -1565,12 +1611,16 @@
         updateGenerateButton();
       });
       elements.generateClassButton.addEventListener("click", generateClassList);
+      elements.loadMoreButton.addEventListener("click", () => {
+        state.visibleLimit += RESULT_BATCH_SIZE;
+        renderResults();
+      });
       elements.printButton.addEventListener("click", () => window.print());
       elements.closeClassListButton.addEventListener("click", () => {
         state.classList = [];
         elements.classListSection.hidden = true;
       });
-      ["click", "keydown", "mousemove", "touchstart", "input"].forEach((eventName) => {
+      ["click", "keydown", "touchstart", "input"].forEach((eventName) => {
         window.addEventListener(eventName, resetAdminIdleTimer);
       });
     }
@@ -2079,12 +2129,15 @@
     }
 
     function renderResults() {
+      const visibleStudents = state.filteredStudents.slice(0, state.visibleLimit);
       elements.resultCount.textContent = `${state.filteredStudents.length} pelajar dijumpai`;
       elements.loadingState.hidden = !state.loading;
       elements.emptyState.hidden = state.loading || state.filteredStudents.length > 0;
       elements.results.hidden = state.loading || state.filteredStudents.length === 0;
       elements.results.className = state.viewMode === "grid" ? "grid-results" : "list-results";
-      elements.results.innerHTML = state.filteredStudents.map((student) => state.viewMode === "grid" ? renderStudentCard(student) : renderStudentRow(student)).join("");
+      elements.results.innerHTML = visibleStudents.map((student) => state.viewMode === "grid" ? renderStudentCard(student) : renderStudentRow(student)).join("");
+      elements.loadMoreWrap.hidden = state.loading || visibleStudents.length >= state.filteredStudents.length;
+      elements.loadMoreButton.textContent = `Papar Lagi (${visibleStudents.length}/${state.filteredStudents.length})`;
     }
 
     function renderStudentCard(student) {
@@ -2159,6 +2212,7 @@
 
     function setViewMode(mode) {
       state.viewMode = mode;
+      state.visibleLimit = RESULT_BATCH_SIZE;
       elements.gridViewButton.classList.toggle("active", mode === "grid");
       elements.listViewButton.classList.toggle("active", mode === "list");
       renderResults();
@@ -2171,6 +2225,7 @@
       state.managementYear = "";
       state.managementClass = "";
       state.classList = [];
+      state.visibleLimit = RESULT_BATCH_SIZE;
       elements.searchInput.value = "";
       elements.clearSearchButton.style.display = "none";
       elements.yearFilter.value = "all";

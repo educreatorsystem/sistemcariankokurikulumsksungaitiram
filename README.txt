@@ -21,6 +21,13 @@ Kaedah penggabungan data:
 - Rumah Sukan dipadankan daripada tab NAMA MURID, RUMAH SUKAN DAN NO K/P hanya apabila nama sama.
 - No K/P dibaca daripada kolum ketiga tab kedua dan hanya dipaparkan selepas pengesahan admin.
 
+Penambahbaikan prestasi dan cetakan:
+- Sistem memaparkan 60 kad pada satu masa dan menyediakan butang Papar Lagi.
+- Carian dan tapisan masih melibatkan semua rekod, bukan hanya kad yang sedang dipaparkan.
+- Pengesanan aktiviti admin tidak lagi berjalan pada setiap pergerakan tetikus.
+- Pengurusan Murid diletakkan di bahagian atas selepas admin log masuk.
+- Jadual cetakan menyokong pilihan potret dan landskap serta membalut teks supaya semua kolum kelihatan.
+
 Mod admin GitHub telah dikonfigurasi menggunakan pengesahan hash SHA-256 dalam pelayar.
 
 Fail admin:
