@@ -1,0 +1,17 @@
+KEMASKINI PWA v3 — SK SUNGAI TIRAM
+
+Log masuk Admin > Pengurusan Murid > Senarai Sejarah Perubatan Seluruh Sekolah.
+Pilih Ada Sejarah Perubatan, Tiada Sejarah Perubatan atau Semua Murid.
+Tekan Jana Senarai Seluruh Sekolah, kemudian Cetak Senarai jika diperlukan.
+Senarai meliputi semua rekod yang dimuatkan, tanpa mengikut tapisan carian atau had paparan kad.
+Cetakan menggunakan tujuh kolum sedia ada dan tajuk kategori pilihan.
+Ruang kosong dan penanda tiada sejarah dikira sebagai tiada sejarah dalam rekod, bukan pengesahan kesihatan.
+
+Muat naik semua kandungan ZIP ke root repository GitHub Pages dan gantikan fail lama.
+Cache PWA telah dinaikkan kepada v3. Buka semula aplikasi dengan internet selepas GitHub Pages selesai dikemas kini.
+Konfigurasi sumber data, kata laluan, ikon dan fungsi kelas sedia ada dikekalkan.
+
+Semakan: sintaks JavaScript, kategori seluruh sekolah (165 rekod ujian),
+pengasingan 65 ada / 100 tiada sejarah, sekatan mod admin, format No K/P,
+penjana kelas, metadata cetakan, rekod kosong, pembersihan selepas log keluar,
+ID elemen dan laluan ikon manifest. Ujian tidak menggunakan data murid sebenar.

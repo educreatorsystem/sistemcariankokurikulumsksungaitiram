@@ -1295,6 +1295,20 @@
           </label>
           <button id="generateClassButton" class="button button-primary" type="button" disabled>Jana Senarai Murid</button>
         </div>
+        <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #e2e8f0;">
+          <h3>Senarai Sejarah Perubatan Seluruh Sekolah</h3>
+          <p style="color:var(--muted);">Meliputi semua tahun dan kelas berdasarkan data yang dimuatkan. Ruang kosong atau rekod “Tiada” dikategorikan sebagai tiada sejarah perubatan dalam rekod.</p>
+          <div class="management-grid">
+            <label class="field"><span>Kategori Perubatan</span>
+              <select id="managementMedical">
+                <option value="has">Ada Sejarah Perubatan</option>
+                <option value="none">Tiada Sejarah Perubatan</option>
+                <option value="all">Semua Murid</option>
+              </select>
+            </label>
+            <button id="generateMedicalButton" class="button button-primary" type="button">Jana Senarai Seluruh Sekolah</button>
+          </div>
+        </div>
       </section>
 
       <section class="panel no-print">
@@ -1460,7 +1474,7 @@
       maskIdentityNumber: false
     };
 
-    const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v3";
+    const CACHE_KEY = "sistem-carian-pelajar:public-cache:standalone:v4";
     const LOADING_MESSAGE = "Memuatkan data pelajar daripada Google Sheets...";
     const RESULT_BATCH_SIZE = 60;
     const DEFAULT_FILTERS = {
@@ -1482,6 +1496,7 @@
       adminActive: false,
       adminToken: "",
       classList: [],
+      listDescription: "",
       managementYear: "",
       managementClass: "",
       visibleLimit: RESULT_BATCH_SIZE,
@@ -1509,7 +1524,7 @@
         "classFilter", "genderFilter", "medicalFilter", "houseButtons",
         "resultCount", "loadingState", "emptyState", "emptyResetButton", "results", "loadMoreWrap", "loadMoreButton",
         "managementSection", "managementYear", "managementClass",
-        "generateClassButton", "classListSection", "printBadge",
+        "managementMedical", "generateMedicalButton", "generateClassButton", "classListSection", "printBadge",
         "printSchoolName", "printMeta", "classListMeta", "summaryTotal",
         "summaryMale", "summaryFemale", "classListBody", "printButton",
         "closeClassListButton", "adminModal", "adminForm", "closeAdminModalButton",
@@ -1611,11 +1626,12 @@
         updateGenerateButton();
       });
       elements.generateClassButton.addEventListener("click", generateClassList);
+      elements.generateMedicalButton.addEventListener("click", generateMedicalList);
       elements.loadMoreButton.addEventListener("click", () => {
         state.visibleLimit += RESULT_BATCH_SIZE;
         renderResults();
       });
-      elements.printButton.addEventListener("click", () => window.print());
+      elements.printButton.addEventListener("click", () => { if (state.adminActive && state.classList.length) window.print(); });
       elements.closeClassListButton.addEventListener("click", () => {
         state.classList = [];
         elements.classListSection.hidden = true;
@@ -1753,7 +1769,7 @@
     function normalizeMedical(value) {
       const text = cleanText(value);
       const upper = text.toLocaleUpperCase("ms-MY");
-      if (!text || ["-", "TIADA", "TIADA SEJARAH", "SIHAT", "NIL", "NONE", "NO"].includes(upper)) return "";
+      if (!text || ["-", "—", "TIADA", "TIADA SEJARAH", "TIADA SEJARAH PERUBATAN", "TIADA PENYAKIT", "TIDAK ADA", "SIHAT", "NIL", "NONE", "NO", "N/A", "NA"].includes(upper)) return "";
       return text;
     }
 
@@ -2322,6 +2338,8 @@
       state.adminActive = false;
       state.adminToken = "";
       state.classList = [];
+      state.listDescription = "";
+      elements.classListBody.innerHTML = "";
       elements.classListSection.hidden = true;
       clearTimeout(adminIdleTimer);
       showToast(reason === "timeout" ? "warning" : "info", reason === "timeout" ? "Sesi admin tamat." : "Mod admin telah ditutup.");
@@ -2335,7 +2353,8 @@
     }
 
     function generateClassList() {
-      if (!state.managementYear || !state.managementClass) return;
+      if (!state.adminActive || state.loading || !state.managementYear || !state.managementClass) return;
+      state.listDescription = `Tahun ${displayValue(state.managementYear)} · Kelas ${displayValue(state.managementClass)}`;
       state.classList = sortStudents(state.students.filter((student) => String(student.tahun) === state.managementYear && student.kelas === state.managementClass));
       if (!state.classList.length) {
         showToast("info", "Tiada data murid dijumpai.");
@@ -2345,16 +2364,33 @@
       renderClassList();
     }
 
+    function generateMedicalList() {
+      if (!state.adminActive) return;
+      if (state.loading) { showToast("info", "Sila tunggu data selesai dimuatkan."); return; }
+      const category = elements.managementMedical.value;
+      const labels = { has: "Ada Sejarah Perubatan", none: "Tiada Sejarah Perubatan", all: "Semua Murid" };
+      if (!labels[category]) return;
+      state.classList = sortStudents(state.students.filter(student => {
+        const hasHistory = Boolean(normalizeMedical(student.sejarahPerubatan));
+        return category === "all" || (category === "has" ? hasHistory : !hasHistory);
+      }));
+      state.listDescription = `Seluruh Sekolah · ${labels[category]}`;
+      renderClassList();
+      showToast(state.classList.length ? "success" : "info", `${state.classList.length} murid · ${labels[category]}`);
+    }
+
     function renderClassList() {
-      elements.classListSection.hidden = state.classList.length === 0;
+      if (!state.adminActive) return;
+      elements.classListSection.hidden = false;
+      elements.printButton.disabled = state.classList.length === 0;
       const total = state.classList.length;
       const male = state.classList.filter((student) => student.jantina === "LELAKI").length;
       const female = state.classList.filter((student) => student.jantina === "PEREMPUAN").length;
       elements.summaryTotal.textContent = total;
       elements.summaryMale.textContent = male;
       elements.summaryFemale.textContent = female;
-      elements.classListMeta.textContent = `Tahun ${displayValue(state.managementYear)} · Kelas ${displayValue(state.managementClass)}`;
-      elements.printMeta.textContent = `Tahun ${displayValue(state.managementYear)} · Kelas ${displayValue(state.managementClass)} · Tarikh cetakan: ${formatDateTime(new Date())}`;
+      elements.classListMeta.textContent = state.listDescription;
+      elements.printMeta.textContent = `${state.listDescription} · Tarikh cetakan: ${formatDateTime(new Date())}`;
       elements.classListBody.innerHTML = state.classList.map((student, index) => `
         <tr>
           <td>${index + 1}</td>
@@ -2366,6 +2402,7 @@
           <td>${student.sejarahPerubatan ? `${medicalIcon(student.sejarahPerubatan)} ${escapeHtml(student.sejarahPerubatan)}` : "-"}</td>
         </tr>
       `).join("");
+      if (!total) elements.classListBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tiada pelajar dalam kategori ini.</td></tr>';
       elements.classListSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
